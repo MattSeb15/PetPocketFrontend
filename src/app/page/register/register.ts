@@ -23,7 +23,7 @@ export class Register {
     userName: ['', [Validators.required]],
     emailUser: ['', [Validators.required, Validators.email]],
     phoneUser: [''], // Opcional
-    passwordUser: ['', [Validators.required, Validators.minLength(6)]]
+    passwordUser: ['', [Validators.required, Validators.minLength(6)]],
   });
 
   mensajeError: string = '';
@@ -47,9 +47,7 @@ export class Register {
         console.error('Error en el registro:', err);
         // Mostrar el mensaje que viene del backend (ej: "Usuario ya existe")
         this.mensajeError = err.error.message || 'Ocurrió un error al registrarse';
-      }
+      },
     });
   }
 }
-
-

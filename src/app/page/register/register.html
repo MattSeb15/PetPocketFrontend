@@ -16,56 +16,36 @@
 
         <!-- Nombre completo y Usuario -->
         <div class="row">
-          <input
-            type="text"
-            placeholder="Nombre Completo *"
-            formControlName="nameUsers"
-            [class.input-error]="registerForm.get('nameUsers')?.touched && registerForm.get('nameUsers')?.invalid"
-          >
-          <input
-            type="text"
-            placeholder="Nombre de Usuario *"
-            formControlName="userName"
-            [class.input-error]="registerForm.get('userName')?.touched && registerForm.get('userName')?.invalid"
-          >
+          <input type="text" placeholder="Nombre Completo *" formControlName="nameUsers"
+            [class.input-error]="registerForm.get('nameUsers')?.touched && registerForm.get('nameUsers')?.invalid">
+          <input type="text" placeholder="Nombre de Usuario *" formControlName="userName"
+            [class.input-error]="registerForm.get('userName')?.touched && registerForm.get('userName')?.invalid">
         </div>
-        <small *ngIf="registerForm.get('nameUsers')?.touched && registerForm.get('nameUsers')?.invalid" class="text-error">
+        <small *ngIf="registerForm.get('nameUsers')?.touched && registerForm.get('nameUsers')?.invalid"
+          class="text-error">
           El nombre es obligatorio.
         </small>
 
         <!-- Correo -->
-        <input
-          type="email"
-          placeholder="Correo Electrónico *"
-          formControlName="emailUser"
-          [class.input-error]="registerForm.get('emailUser')?.touched && registerForm.get('emailUser')?.invalid"
-        >
-        <small *ngIf="registerForm.get('emailUser')?.touched && registerForm.get('emailUser')?.invalid" class="text-error">
+        <input type="email" placeholder="Correo Electrónico *" formControlName="emailUser"
+          [class.input-error]="registerForm.get('emailUser')?.touched && registerForm.get('emailUser')?.invalid">
+        <small *ngIf="registerForm.get('emailUser')?.touched && registerForm.get('emailUser')?.invalid"
+          class="text-error">
           Ingresa un correo válido.
         </small>
 
         <!-- Teléfono -->
-        <input
-          type="tel"
-          placeholder="Número de Contacto"
-          formControlName="phoneUser"
-        >
+        <input type="tel" placeholder="Número de Contacto" formControlName="phoneUser">
 
         <!-- Contraseña -->
         <div class="row">
-          <input
-            type="password"
-            placeholder="Contraseña *"
-            formControlName="passwordUser"
-            [class.input-error]="registerForm.get('passwordUser')?.touched && registerForm.get('passwordUser')?.invalid"
-          >
+          <input type="password" placeholder="Contraseña *" formControlName="passwordUser"
+            [class.input-error]="registerForm.get('passwordUser')?.touched && registerForm.get('passwordUser')?.invalid">
           <!-- Campo opcional: Confirmar contraseña (si lo quieres agregar en el futuro) -->
-          <input
-            type="password"
-            placeholder="Confirmar Contraseña"
-          >
+          <input type="password" placeholder="Confirmar Contraseña">
         </div>
-        <small *ngIf="registerForm.get('passwordUser')?.touched && registerForm.get('passwordUser')?.invalid" class="text-error">
+        <small *ngIf="registerForm.get('passwordUser')?.touched && registerForm.get('passwordUser')?.invalid"
+          class="text-error">
           Mínimo 6 caracteres.
         </small>
 
