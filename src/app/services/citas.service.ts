@@ -5,6 +5,7 @@ import {
   Cita,
   CitaDetalle,
   CrearCitaRequest,
+  CrearCitaResponse,
   ReprogramarCitaRequest,
   CambiarEstadoCitaRequest,
   DisponibilidadResponse,
@@ -27,7 +28,11 @@ export class CitasService {
 
   // Obtener todas las citas
   obtenerTodasCitas(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/lista`);
+    const params = new HttpParams().set('t', Date.now().toString());
+    return this.http.get(`${this.apiUrl}/lista`, {
+      params,
+      headers: { 'Cache-Control': 'no-cache' },
+    });
   }
 
   // Obtener detalle de una cita específica
@@ -41,7 +46,12 @@ export class CitasService {
     if (estado) {
       params = params.set('estado', estado);
     }
-    return this.http.get(`${this.apiUrl}/cliente/${idCliente}`, { params });
+    // Evitar respuestas cacheadas (304) agregando timestamp
+    params = params.set('t', Date.now().toString());
+    return this.http.get(`${this.apiUrl}/cliente/${idCliente}`, {
+      params,
+      headers: { 'Cache-Control': 'no-cache' },
+    });
   }
 
   // Obtener calendario de citas
@@ -62,7 +72,7 @@ export class CitasService {
   verificarDisponibilidad(
     fecha: string,
     hora: string,
-    idVeterinario?: number
+    idVeterinario?: number | null
   ): Observable<DisponibilidadResponse> {
     let params = new HttpParams().set('fecha', fecha).set('hora', hora);
 
@@ -87,8 +97,8 @@ export class CitasService {
   // ==================== CREATE (Crear) ====================
 
   // Crear nueva cita
-  crearCita(datos: CrearCitaRequest): Observable<any> {
-    return this.http.post(`${this.apiUrl}/crear`, datos);
+  crearCita(datos: CrearCitaRequest): Observable<CrearCitaResponse> {
+    return this.http.post<CrearCitaResponse>(`${this.apiUrl}/crear`, datos);
   }
 
   // ==================== UPDATE (Actualizar) ====================

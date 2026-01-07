@@ -1,127 +1,253 @@
 <div class="mis-citas-container">
-    <div class="header">
-        <h1>Mis Citas</h1>
-        <a routerLink="/agendar-cita" class="btn-nueva-cita">
-            + Nueva Cita
-        </a>
+  <div class="header">
+    <div class="title-group">
+      <div class="title-pill">Agenda</div>
+      <h1>Mis Citas</h1>
+      <p class="title-sub">Gestiona y da seguimiento a tus citas</p>
+    </div>
+    <div class="header-buttons">
+      <a routerLink="/agendar-cita" class="btn-nueva-cita"> + Nueva Cita </a>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <a
+      [routerLink]="[]"
+      [queryParams]="{ estado: 'todas' }"
+      [queryParamsHandling]="'merge'"
+      [class.activo]="filtroEstado === 'todas'"
+      class="filtro-link"
+    >
+      Todas
+    </a>
+    <a
+      [routerLink]="[]"
+      [queryParams]="{ estado: 'programada' }"
+      [queryParamsHandling]="'merge'"
+      [class.activo]="filtroEstado === 'programada'"
+      class="filtro-link"
+    >
+      Programadas
+    </a>
+    <a
+      [routerLink]="[]"
+      [queryParams]="{ estado: 'confirmada' }"
+      [queryParamsHandling]="'merge'"
+      [class.activo]="filtroEstado === 'confirmada'"
+      class="filtro-link"
+    >
+      Confirmadas
+    </a>
+    <a
+      [routerLink]="[]"
+      [queryParams]="{ estado: 'completada' }"
+      [queryParamsHandling]="'merge'"
+      [class.activo]="filtroEstado === 'completada'"
+      class="filtro-link"
+    >
+      Completadas
+    </a>
+    <a
+      [routerLink]="[]"
+      [queryParams]="{ estado: 'cancelada' }"
+      [queryParamsHandling]="'merge'"
+      [class.activo]="filtroEstado === 'cancelada'"
+      class="filtro-link"
+    >
+      Canceladas
+    </a>
+  </div>
+
+  <!-- Loader -->
+  <div *ngIf="cargando" class="loader">
+    <p>Cargando citas...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- Lista de Citas -->
+  <div *ngIf="!cargando && !error" class="citas-lista">
+    <div *ngIf="citasFiltradas.length === 0" class="sin-citas">
+      <p>No tienes citas {{ filtroEstado !== 'todas' ? filtroEstado + 's' : '' }}.</p>
+      <a routerLink="/agendar-cita" class="btn-agendar">Agendar una cita</a>
     </div>
 
-    <!-- Filtros -->
-    <div class="filtros">
-        <button [class.activo]="filtroEstado === 'todas'" (click)="cambiarFiltro('todas')">
-            Todas
-        </button>
-        <button [class.activo]="filtroEstado === 'programada'" (click)="cambiarFiltro('programada')">
-            Programadas
-        </button>
-        <button [class.activo]="filtroEstado === 'confirmada'" (click)="cambiarFiltro('confirmada')">
-            Confirmadas
-        </button>
-        <button [class.activo]="filtroEstado === 'completada'" (click)="cambiarFiltro('completada')">
-            Completadas
-        </button>
-        <button [class.activo]="filtroEstado === 'cancelada'" (click)="cambiarFiltro('cancelada')">
-            Canceladas
-        </button>
-    </div>
+    <div *ngFor="let cita of citasFiltradas" class="cita-card">
+      <div class="cita-header">
+        <div class="fecha-hora">
+          <div class="fecha">{{ formatearFecha(cita.fecha) }}</div>
+          <div class="hora-chip">{{ cita.hora }}</div>
+        </div>
+        <span class="estado-badge" [ngClass]="obtenerClaseEstado(cita.estadoCita)">
+          {{ cita.estadoCita }}
+        </span>
+      </div>
 
-    <!-- Loader -->
-    <div *ngIf="cargando" class="loader">
-        <p>Cargando citas...</p>
-    </div>
-
-    <!-- Error -->
-    <div *ngIf="error" class="error-message">
-        {{ error }}
-    </div>
-
-    <!-- Lista de Citas -->
-    <div *ngIf="!cargando && !error" class="citas-lista">
-        <div *ngIf="citasFiltradas.length === 0" class="sin-citas">
-            <p>No tienes citas {{ filtroEstado !== 'todas' ? filtroEstado + 's' : '' }}.</p>
-            <a routerLink="/agendar-cita" class="btn-agendar">Agendar una cita</a>
+      <div class="cita-body">
+        <div class="meta-chips">
+          <span class="tag" *ngIf="cita.servicio?.nombre || cita.nombreServicio">
+            {{ cita.servicio?.nombre || cita.nombreServicio }}
+          </span>
+          <span class="tag" *ngIf="cita.veterinario?.nombre || cita.nombreVeterinario">
+            {{ cita.veterinario?.nombre || cita.nombreVeterinario }}
+          </span>
+          <span class="tag" *ngIf="cita.mascota?.especie">
+            {{ cita.mascota?.especie }}
+          </span>
         </div>
 
-        <div *ngFor="let cita of citasFiltradas" class="cita-card">
-            <div class="cita-header">
-                <div class="fecha-hora">
-                    <div class="fecha">{{ formatearFecha(cita.fecha) }}</div>
-                    <div class="hora">{{ cita.hora }}</div>
-                </div>
-                <span class="estado-badge" [ngClass]="obtenerClaseEstado(cita.estadoCita)">
-                    {{ cita.estadoCita }}
+        <div class="info-grid">
+          <div class="info-item">
+            <strong>Mascota:</strong> {{ cita.mascota?.nombre || cita.nombreMascota || 'N/A' }}
+            <span *ngIf="cita.mascota?.especie"> ({{ cita.mascota?.especie }})</span>
+          </div>
+          <div class="info-item" *ngIf="cita.veterinario?.nombre || cita.nombreVeterinario">
+            <strong>Veterinario:</strong> {{ cita.veterinario?.nombre || cita.nombreVeterinario }}
+          </div>
+          <div class="info-item" *ngIf="cita.servicio?.nombre || cita.nombreServicio">
+            <strong>Servicio:</strong> {{ cita.servicio?.nombre || cita.nombreServicio }}
+            <span *ngIf="cita.servicio?.precio"> - ${{ cita.servicio?.precio }}</span>
+          </div>
+          <div class="info-item" *ngIf="cita.createCita">
+            <strong>Creada:</strong>
+            <span class="pill light">{{ formatearFechaHora(cita.createCita) }}</span>
+          </div>
+          <div class="info-item" *ngIf="cita.detallesMongo?.motivo || cita.motivo">
+            <strong>Motivo:</strong> {{ cita.detallesMongo?.motivo || cita.motivo }}
+          </div>
+          <div class="info-item" *ngIf="cita.detallesMongo?.sintomas || cita.sintomas">
+            <strong>Síntomas:</strong> {{ cita.detallesMongo?.sintomas || cita.sintomas }}
+          </div>
+        </div>
+
+        <div
+          class="cita-actions"
+          *ngIf="cita.estadoCita !== 'cancelada' && cita.estadoCita !== 'completada'"
+        >
+          <button
+            *ngIf="cita.estadoCita === 'programada'"
+            class="btn-confirmar"
+            (click)="confirmarCita(cita.idCita!)"
+          >
+            Confirmar
+          </button>
+          <button class="btn-reprogramar" (click)="abrirModalReprogramar(cita)">Reprogramar</button>
+          <button class="btn-cancelar" (click)="cancelarCita(cita.idCita!)">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- Modal Reprogramar -->
+      <div *ngIf="mostrarModalReprogramar" class="modal-overlay" (click)="cerrarModalReprogramar()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Reprogramar Cita</h2>
+            <button class="btn-cerrar" (click)="cerrarModalReprogramar()">✕</button>
+          </div>
+
+          <div class="modal-body">
+            <div class="resumen-cita" *ngIf="citaSeleccionada">
+              <div class="resumen-item">
+                <span class="label">Fecha actual:</span>
+                <span class="value"
+                  >{{ formatearFecha(citaSeleccionada.fecha) }} - {{ citaSeleccionada.hora }}</span
+                >
+              </div>
+              <div class="resumen-item" *ngIf="citaSeleccionada.createCita">
+                <span class="label">Creada:</span>
+                <span class="value">{{ formatearFechaHora(citaSeleccionada.createCita) }}</span>
+              </div>
+              <div class="resumen-item" *ngIf="citaSeleccionada.estadoCita">
+                <span class="label">Estado:</span>
+                <span class="value estado">{{ citaSeleccionada.estadoCita }}</span>
+              </div>
+              <div
+                class="resumen-item"
+                *ngIf="citaSeleccionada.mascota?.nombre || citaSeleccionada.nombreMascota"
+              >
+                <span class="label">Mascota:</span>
+                <span class="value">
+                  {{ citaSeleccionada.mascota?.nombre || citaSeleccionada.nombreMascota }}
+                  <ng-container *ngIf="citaSeleccionada.mascota?.especie"
+                    >({{ citaSeleccionada.mascota?.especie }})</ng-container
+                  >
                 </span>
+              </div>
+              <div
+                class="resumen-item"
+                *ngIf="citaSeleccionada.servicio?.nombre || citaSeleccionada.nombreServicio"
+              >
+                <span class="label">Servicio:</span>
+                <span class="value">{{
+                  citaSeleccionada.servicio?.nombre || citaSeleccionada.nombreServicio
+                }}</span>
+              </div>
+              <div
+                class="resumen-item"
+                *ngIf="citaSeleccionada.veterinario?.nombre || citaSeleccionada.nombreVeterinario"
+              >
+                <span class="label">Veterinario:</span>
+                <span class="value">{{
+                  citaSeleccionada.veterinario?.nombre || citaSeleccionada.nombreVeterinario
+                }}</span>
+              </div>
+              <div
+                class="resumen-item"
+                *ngIf="citaSeleccionada.detallesMongo?.motivo || citaSeleccionada.motivo"
+              >
+                <span class="label">Motivo:</span>
+                <span class="value">{{
+                  citaSeleccionada.detallesMongo?.motivo || citaSeleccionada.motivo
+                }}</span>
+              </div>
+              <div
+                class="resumen-item"
+                *ngIf="citaSeleccionada.detallesMongo?.sintomas || citaSeleccionada.sintomas"
+              >
+                <span class="label">Síntomas:</span>
+                <span class="value">{{
+                  citaSeleccionada.detallesMongo?.sintomas || citaSeleccionada.sintomas
+                }}</span>
+              </div>
             </div>
 
-            <div class="cita-body">
-                <div class="info-item">
-                    <strong>Mascota:</strong> {{ cita.mascota?.nombre || cita.nombreMascota || 'N/A' }}
-                    <span *ngIf="cita.mascota?.especie"> ({{ cita.mascota?.especie }})</span>
-                </div>
-                <div class="info-item" *ngIf="cita.veterinario?.nombre || cita.nombreVeterinario">
-                    <strong>Veterinario:</strong> {{ cita.veterinario?.nombre || cita.nombreVeterinario }}
-                </div>
-                <div class="info-item" *ngIf="cita.servicio?.nombre || cita.nombreServicio">
-                    <strong>Servicio:</strong> {{ cita.servicio?.nombre || cita.nombreServicio }}
-                    <span *ngIf="cita.servicio?.precio"> - ${{ cita.servicio?.precio }}</span>
-                </div>
-                <div class="info-item" *ngIf="cita.detallesMongo?.motivo || cita.motivo">
-                    <strong>Motivo:</strong> {{ cita.detallesMongo?.motivo || cita.motivo }}
-                </div>
-                <div class="info-item" *ngIf="cita.detallesMongo?.sintomas || cita.sintomas">
-                    <strong>Síntomas:</strong> {{ cita.detallesMongo?.sintomas || cita.sintomas }}
-
-                    <div class="cita-actions"
-                        *ngIf="cita.estadoCita !== 'cancelada' && cita.estadoCita !== 'completada'">
-                        <button *ngIf="cita.estadoCita === 'programada'" class="btn-confirmar"
-                            (click)="confirmarCita(cita.idCita!)">
-                            Confirmar
-                        </button>
-                        <button class="btn-reprogramar" (click)="abrirModalReprogramar(cita)">
-                            Reprogramar
-                        </button>
-                        <button class="btn-cancelar" (click)="cancelarCita(cita.idCita!)">
-                            Cancelar
-                        </button>
-                    </div>
-                </div>
+            <div class="form-group">
+              <label for="nuevaFecha">Nueva Fecha:</label>
+              <input
+                type="date"
+                id="nuevaFecha"
+                [(ngModel)]="nuevaFecha"
+                [min]="nuevaFecha"
+                class="form-control"
+              />
             </div>
 
-            <!-- Modal Reprogramar -->
-            <div *ngIf="mostrarModalReprogramar" class="modal-overlay" (click)="cerrarModalReprogramar()">
-                <div class="modal-content" (click)="$event.stopPropagation()">
-                    <div class="modal-header">
-                        <h2>Reprogramar Cita</h2>
-                        <button class="btn-cerrar" (click)="cerrarModalReprogramar()">✕</button>
-                    </div>
-
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label for="nuevaFecha">Nueva Fecha:</label>
-                            <input type="date" id="nuevaFecha" [(ngModel)]="nuevaFecha" [min]="nuevaFecha"
-                                class="form-control">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="nuevaHora">Nueva Hora:</label>
-                            <input type="time" id="nuevaHora" [(ngModel)]="nuevaHora" class="form-control">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="motivoReprogramacion">Motivo (opcional):</label>
-                            <textarea id="motivoReprogramacion" [(ngModel)]="motivoReprogramacion" rows="3"
-                                class="form-control" placeholder="Razón de la reprogramación..."></textarea>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button class="btn-cancelar-modal" (click)="cerrarModalReprogramar()">
-                            Cancelar
-                        </button>
-                        <button class="btn-guardar" (click)="reprogramarCita()">
-                            Guardar Cambios
-                        </button>
-                    </div>
-                </div>
+            <div class="form-group">
+              <label for="nuevaHora">Nueva Hora:</label>
+              <input type="time" id="nuevaHora" [(ngModel)]="nuevaHora" class="form-control" />
             </div>
+
+            <div class="form-group">
+              <label for="motivoReprogramacion">Motivo (opcional):</label>
+              <textarea
+                id="motivoReprogramacion"
+                [(ngModel)]="motivoReprogramacion"
+                rows="3"
+                class="form-control"
+                placeholder="Razón de la reprogramación..."
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-cancelar-modal" (click)="cerrarModalReprogramar()">Cancelar</button>
+            <button class="btn-guardar" (click)="reprogramarCita()">Guardar Cambios</button>
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>

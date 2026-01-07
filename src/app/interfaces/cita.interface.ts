@@ -15,6 +15,7 @@ export interface Cita {
   notasAdicionales?: string;
   estadoCita?: 'programada' | 'confirmada' | 'cancelada' | 'completada';
   asistio?: boolean;
+  createCita?: string; // timestamp de creación (backend devuelve createCita)
   fechaCreacion?: string;
   fechaActualizacion?: string;
 }
@@ -50,7 +51,7 @@ export interface CrearCitaRequest {
   idServicio: number;
   fecha: string;
   hora: string;
-  usuarioIdUser?: number;
+  userIdUser?: number | null;
   motivo?: string;
   sintomas?: string;
   diagnosticoPrevio?: string;
@@ -61,7 +62,7 @@ export interface CrearCitaRequest {
 export interface ReprogramarCitaRequest {
   fecha?: string;
   hora?: string;
-  usuarioIdUser?: number;
+  userIdUser?: number | null;
   motivoReprogramacion?: string;
 }
 
@@ -82,6 +83,24 @@ export interface EstadisticasCitas {
   confirmadas: number;
   canceladas: number;
   completadas: number;
+}
+
+export interface CrearCitaResponse {
+  success: boolean;
+  message: string;
+  data: {
+    idCita: number;
+    idMongoDB: string;
+    fecha: string;
+    hora: string;
+    estadoCita: string;
+  };
+  verificacion: {
+    existeEnSQL: boolean;
+    existeEnMongoDB: boolean;
+    sincronizado: boolean;
+  };
+  listaCitas?: CitaDetalle[];
 }
 
 export interface Mascota {

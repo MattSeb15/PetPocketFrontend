@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CitasService } from '../../../services/citas.service';
 import { CitaDetalle } from '../../../interfaces/cita.interface';
@@ -14,7 +14,16 @@ import { CitaDetalle } from '../../../interfaces/cita.interface';
 })
 export class MisCitas implements OnInit {
   private citasService = inject(CitasService);
+  private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+
+  private readonly estadosValidos = [
+    'todas',
+    'programada',
+    'confirmada',
+    'completada',
+    'cancelada',
+  ];
 
   citas: CitaDetalle[] = [];
   citasFiltradas: CitaDetalle[] = [];
@@ -33,6 +42,12 @@ export class MisCitas implements OnInit {
   motivoReprogramacion: string = '';
 
   ngOnInit() {
+    this.route.queryParamMap.subscribe((params) => {
+      const estado = params.get('estado');
+      this.filtroEstado = estado && this.esEstadoValido(estado) ? estado : 'todas';
+      this.aplicarFiltro();
+    });
+
     this.cargarCitas();
   }
 
@@ -40,10 +55,20 @@ export class MisCitas implements OnInit {
     this.cargando = true;
     this.error = '';
 
+    console.log('📥 Cargando citas del cliente:', this.idCliente);
+    this.cargarCitasCliente();
+  }
+
+  cargarCitasCliente() {
+    this.cargando = true;
+    this.error = '';
+
     this.citasService.obtenerCitasCliente(this.idCliente).subscribe({
       next: (response) => {
-        console.log('Respuesta citas:', response);
-        this.error = ''; // Limpiar cualquier error previo
+        console.log('✅ Citas recibidas:', response);
+        console.log('Tipo de respuesta:', typeof response);
+        console.log('Es array?', Array.isArray(response));
+
         // Manejar diferentes estructuras de respuesta
         if (Array.isArray(response)) {
           this.citas = response;
@@ -54,86 +79,43 @@ export class MisCitas implements OnInit {
         } else {
           this.citas = [];
         }
-        console.log('Citas asignadas:', this.citas);
+
         console.log('Total citas:', this.citas.length);
-        console.log('Error actual:', this.error);
+        // Ordenar por fecha de creación (desc)
+        this.ordenarPorCreacionDesc(this.citas);
         this.aplicarFiltro();
-        console.log('Citas filtradas:', this.citasFiltradas);
         this.cargando = false;
-        this.cdr.detectChanges(); // Forzar detección de cambios
-        console.log('Estado final - Cargando:', this.cargando, 'Error:', this.error);
+        this.cdr.detectChanges(); // Forzar actualización de la UI
+        console.log(
+          'Estado final - Cargando:',
+          this.cargando,
+          'Citas filtradas:',
+          this.citasFiltradas.length
+        );
       },
       error: (error) => {
-        console.error('Error al cargar citas:', error);
-        this.error = 'No se pudieron cargar las citas. Verifica que el servidor esté funcionando.';
-
-        // Usar datos mock temporalmente para desarrollo
-        console.warn('Usando datos mock de citas');
-        this.citas = [
-          {
-            idCita: 1,
-            idCliente: 1,
-            idMascota: 5,
-            idServicio: 1,
-            fecha: '2025-12-30',
-            hora: '10:00',
-            estadoCita: 'programada',
-            motivo: 'Consulta general',
-            sintomas: 'Revisión rutinaria',
-            nombreCliente: 'Juan Pérez',
-            nombreMascota: 'Max',
-            nombreVeterinario: 'Dr. García',
-            nombreServicio: 'Consulta General',
-          },
-          {
-            idCita: 2,
-            idCliente: 1,
-            idMascota: 6,
-            idServicio: 2,
-            fecha: '2025-12-28',
-            hora: '15:00',
-            estadoCita: 'confirmada',
-            motivo: 'Vacunación',
-            sintomas: 'Ninguno',
-            nombreCliente: 'Juan Pérez',
-            nombreMascota: 'Luna',
-            nombreVeterinario: 'Dra. Martínez',
-            nombreServicio: 'Vacunación',
-          },
-          {
-            idCita: 3,
-            idCliente: 1,
-            idMascota: 5,
-            idServicio: 3,
-            fecha: '2025-12-25',
-            hora: '11:30',
-            estadoCita: 'completada',
-            motivo: 'Cirugía menor',
-            sintomas: 'Herida en pata',
-            nombreCliente: 'Juan Pérez',
-            nombreMascota: 'Max',
-            nombreVeterinario: 'Dr. García',
-            nombreServicio: 'Cirugía',
-          },
-        ];
-        this.aplicarFiltro();
+        console.error('❌ Error al cargar citas:', error);
+        this.error = 'No se pudieron cargar las citas';
+        this.citas = [];
+        this.citasFiltradas = [];
         this.cargando = false;
-        this.cdr.detectChanges(); // Forzar detección de cambios
+        this.cdr.detectChanges(); // Forzar actualización de la UI
       },
     });
   }
 
+  cargarTodasLasCitas() {
+    // Método no usado; se mantiene vacío por si se requiere en el futuro
+  }
+
   aplicarFiltro() {
     if (this.filtroEstado === 'todas') {
-      this.citasFiltradas = this.citas;
+      this.citasFiltradas = [...this.citas];
     } else {
       this.citasFiltradas = this.citas.filter((c) => c.estadoCita === this.filtroEstado);
     }
-  }
-
-  cambiarFiltro(estado: string) {
-    this.filtroEstado = estado;
-    this.aplicarFiltro();
+    // Mantener orden por creación en el filtrado
+    this.ordenarPorCreacionDesc(this.citasFiltradas);
   }
 
   abrirModalReprogramar(cita: CitaDetalle) {
@@ -234,5 +216,29 @@ export class MisCitas implements OnInit {
       month: 'long',
       day: 'numeric',
     });
+  }
+
+  formatearFechaHora(fecha: string): string {
+    const date = new Date(fecha);
+    return date.toLocaleString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  // Orden descendente por fecha de creación; fallback a fecha si no existe
+  private ordenarPorCreacionDesc(lista: CitaDetalle[]) {
+    lista.sort((a, b) => {
+      const da = new Date(a.createCita || a.fecha || 0).getTime();
+      const db = new Date(b.createCita || b.fecha || 0).getTime();
+      return db - da;
+    });
+  }
+
+  private esEstadoValido(estado: string): boolean {
+    return this.estadosValidos.includes(estado);
   }
 }

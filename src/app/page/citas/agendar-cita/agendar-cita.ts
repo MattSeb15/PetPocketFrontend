@@ -36,7 +36,7 @@ export class AgendarCita implements OnInit {
     idServicio: 0,
     fecha: '',
     hora: '',
-    usuarioIdUser: undefined,
+    userIdUser: null,
     motivo: '',
     sintomas: '',
     diagnosticoPrevio: '',
@@ -90,10 +90,8 @@ export class AgendarCita implements OnInit {
     ];
 
     this.veterinarios = [
-      { idUser: 2, nombre: 'Dr. Juan Pérez', especialidad: 'Medicina General' },
-      { idUser: 3, nombre: 'Dra. María García', especialidad: 'Cirugía' },
-      { idUser: 4, nombre: 'Dr. Carlos López', especialidad: 'Dermatología' },
-      { idUser: 5, nombre: 'Dra. Ana Martínez', especialidad: 'Cardiología' },
+      { idUser: 1, nombre: 'Veterinario 1', especialidad: 'Medicina General' },
+      { idUser: 2, nombre: 'Veterinario 2', especialidad: 'Cirugía' },
     ];
 
     this.cargando = false;
@@ -125,7 +123,7 @@ export class AgendarCita implements OnInit {
 
     this.verificandoDisponibilidad = true;
     this.citasService
-      .verificarDisponibilidad(this.cita.fecha, this.cita.hora, this.cita.usuarioIdUser)
+      .verificarDisponibilidad(this.cita.fecha, this.cita.hora, this.cita.userIdUser)
       .subscribe({
         next: (response) => {
           this.disponible = response.disponible;
@@ -187,13 +185,25 @@ export class AgendarCita implements OnInit {
     }
 
     this.cargando = true;
+
+    console.log('📤 Datos a enviar:', this.cita);
+    console.log('userIdUser:', this.cita.userIdUser, 'tipo:', typeof this.cita.userIdUser);
+
     this.citasService.crearCita(this.cita).subscribe({
       next: (response) => {
-        alert('¡Cita agendada exitosamente!');
-        this.router.navigate(['/mis-citas']);
+        console.log('✅ Cita agendada exitosamente:', response);
+
+        if (response.success && response.data) {
+          console.log('ID de cita creada:', response.data.idCita);
+          alert('¡Cita agendada exitosamente!');
+          this.router.navigate(['/mis-citas']);
+        } else {
+          alert('¡Cita agendada exitosamente!');
+          this.router.navigate(['/mis-citas']);
+        }
       },
       error: (error) => {
-        console.error('Error al agendar cita:', error);
+        console.error('❌ Error al agendar cita:', error);
         this.error = error.error?.message || 'No se pudo agendar la cita. Intenta nuevamente.';
         this.cargando = false;
       },
